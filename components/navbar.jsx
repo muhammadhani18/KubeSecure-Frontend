@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import {
@@ -17,8 +18,9 @@ import {
   Shield,
 } from "lucide-react"
 
-export function Navbar({ activePage = "/" }) {
+export function Navbar() {
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -50,7 +52,14 @@ export function Navbar({ activePage = "/" }) {
             <nav className="grid gap-2 text-sm">
               {navItems.map((item) => {
                 const Icon = item.icon
-                const isActive = activePage === item.href
+                // Check if this is the current page
+                const isActive =
+                  pathname === item.href ||
+                  // Handle special case for home page
+                  (pathname === "/" && item.href === "/") ||
+                  // Handle nested routes
+                  (pathname.startsWith(item.href) && item.href !== "/")
+
                 return (
                   <Link
                     key={item.href}
@@ -78,7 +87,14 @@ export function Navbar({ activePage = "/" }) {
           <nav className="grid gap-2 text-sm">
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = activePage === item.href
+              // Check if this is the current page
+              const isActive =
+                pathname === item.href ||
+                // Handle special case for home page
+                (pathname === "/" && item.href === "/") ||
+                // Handle nested routes
+                (pathname.startsWith(item.href) && item.href !== "/")
+
               return (
                 <Link
                   key={item.href}

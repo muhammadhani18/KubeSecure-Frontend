@@ -19,7 +19,7 @@ import { Navbar } from "@/components/navbar"
 import Header from "@/components/header"
 
 
-export default function Home() {
+export default function Dashboard() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
@@ -80,7 +80,6 @@ export default function Home() {
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="workloads">Workloads</TabsTrigger>
                 <TabsTrigger value="events">Events</TabsTrigger>
-                <TabsTrigger value="logs">Logs</TabsTrigger>
               </TabsList>
               <TabsContent value="overview" className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -339,24 +338,7 @@ export default function Home() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="logs" className="space-y-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Pod Logs</CardTitle>
-                      <CardDescription>Select a pod to view its logs</CardDescription>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Download Logs
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-md border bg-muted/50 p-4 font-mono text-sm">
-                      <div className="text-muted-foreground">Select a pod to view logs</div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+              
             </Tabs>
           </div>
         </main>

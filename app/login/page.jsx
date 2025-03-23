@@ -35,7 +35,7 @@ export default function LoginPage() {
 
       // For demo purposes, accept any credentials
       // In a real app, you would validate against your auth system
-      router.push("/")
+      router.push("/dashboard")
     }, 1500)
   }
 
