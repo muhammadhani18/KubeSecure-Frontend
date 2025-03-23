@@ -1,22 +1,15 @@
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  Activity,
-  AlertCircle,
   Box,
   Cpu,
-  Database,
-  Layers,
   MemoryStickIcon as Memory,
-  Network,
   Server,
-  Shield,
-  Workflow,
 } from "lucide-react"
 import { Navbar } from "@/components/navbar"
 import Header from "@/components/header"
+
 
 
 export default function Dashboard() {
