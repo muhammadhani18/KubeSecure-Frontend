@@ -22,18 +22,13 @@ import Header from "@/components/header"
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header/>
+      <Header />
       <div className="container flex-1 items-start py-8 px-6 md:px-8 md:grid md:grid-cols-[220px_1fr] md:gap-8 lg:grid-cols-[240px_1fr] lg:gap-12">
-        <Navbar/>
+        <Navbar activePage="/" />
         <main className="flex w-full flex-col overflow-hidden space-y-8">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold tracking-tight">Cluster Dashboard</h1>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                Refresh
-              </Button>
-              <Button size="sm">Add Resource</Button>
-            </div>
+            
           </div>
 
           <div className="mt-6 space-y-6">
