@@ -82,7 +82,7 @@ export default function Dashboard() {
                 <TabsTrigger value="events">Events</TabsTrigger>
               </TabsList>
               <TabsContent value="overview" className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
                   <Card>
                     <CardHeader>
                       <CardTitle>Cluster Health</CardTitle>
@@ -150,37 +150,7 @@ export default function Dashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Alerts</CardTitle>
-                      <CardDescription>Recent issues and warnings</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-3">
-                          <AlertCircle className="mt-0.5 h-5 w-5 text-amber-500" />
-                          <div>
-                            <p className="font-medium">High Memory Usage</p>
-                            <p className="text-sm text-muted-foreground">Pod: analytics-worker-7d8f9</p>
-                            <p className="text-xs text-muted-foreground">10 minutes ago</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <AlertCircle className="mt-0.5 h-5 w-5 text-amber-500" />
-                          <div>
-                            <p className="font-medium">Disk Space Warning</p>
-                            <p className="text-sm text-muted-foreground">Node: worker-node-3</p>
-                            <p className="text-xs text-muted-foreground">25 minutes ago</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="ghost" size="sm" className="w-full" asChild>
-                        <Link href="/alerts">View All Alerts</Link>
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                  
                 </div>
 
                 <Card>
@@ -222,11 +192,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter>
-                    <Button variant="ghost" size="sm" className="w-full">
-                      View All Namespaces
-                    </Button>
-                  </CardFooter>
+                  
                 </Card>
               </TabsContent>
 

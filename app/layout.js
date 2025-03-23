@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "KubeVision - Kubernetes Dashboard",
+  title: "KubeSecure - Secure and Monitor Kubernetes Cluster",
   description: "A professional Kubernetes cluster management dashboard",
 }
 
