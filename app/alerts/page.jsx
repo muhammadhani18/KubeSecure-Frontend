@@ -11,7 +11,7 @@ import Header from "@/components/header";
 // Fetch alerts from API
 async function getAlerts() {
   try {
-    const response = await fetch("http://localhost:8000/get-alerts"); // Ensure this matches your API route
+    const response = await fetch("https://foolish-pig-72.telebit.io/get-alerts"); // Ensure this matches your API route
     if (!response.ok) throw new Error("Failed to fetch alerts");
     
     const data = await response.json();

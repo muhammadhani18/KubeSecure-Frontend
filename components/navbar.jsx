@@ -30,7 +30,7 @@ export function Navbar() {
     { href: "http://localhost:8080", label: "Grafana", icon: BarChart3 },
     { href: "#", label: "Security", icon: Lock },
     { href: "/alerts", label: "Alerts", icon: AlertCircle },
-    { href: "#", label: "Namespaces", icon: Boxes },
+    
   ]
 
   return (
