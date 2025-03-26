@@ -9,10 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { EyeIcon, EyeOffIcon, Layers, LockIcon, MailIcon } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast";
+
+const apiLink = process.env.NEXT_PUBLIC_API_URL;
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
+  const { toast } = useToast()
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -23,20 +27,51 @@ export default function LoginPage() {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
+    console.log("apiLink", apiLink);
 
-    // Simulate authentication delay
-    setTimeout(() => {
-      // Simple validation
-      if (!email || !password) {
-        setError("Please enter both email and password")
-        setIsLoading(false)
-        return;
+    try {
+      // Create form data for the API
+      const formData = new URLSearchParams()
+      formData.append("username", email) // API expects 'username' field
+      formData.append("password", password)
+
+      // Call the login API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || "Login failed")
       }
 
-      // For demo purposes, accept any credentials
-      // In a real app, you would validate against your auth system
+      // Store the token in localStorage
+      sessionStorage.setItem("token", data.access_token)
+
+      // Show success message
+      toast({
+        title: "Login successful",
+        description: "You have been successfully logged in.",
+      })
+
+      // Redirect to dashboard
       router.push("/dashboard")
-    }, 1500)
+    } catch (err) {
+      console.error("Login error:", err)
+      setError(err.message || "Failed to login. Please check your credentials.")
+      toast({
+        title: "Login failed",
+        description: err.message || "Failed to login. Please check your credentials.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

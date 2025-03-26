@@ -15,7 +15,7 @@ import Header from "@/components/header";
 // Fetch Cluster Info (Client Side)
 async function fetchClusterInfo() {
   try {
-    const response = await fetch("https://foolish-pig-72.telebit.io/cluster-info");
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cluster-info`);
     if (!response.ok) {
       throw new Error(`API responded with status: ${response.status}`);
     }

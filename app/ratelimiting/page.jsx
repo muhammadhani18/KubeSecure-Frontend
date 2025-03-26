@@ -20,7 +20,7 @@ export default function RateLimitingPage() {
 
   const handleApplyRateLimit = async () => {
     try {
-      const response = await fetch("https://foolish-pig-72.telebit.io/apply_rate_limit", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/apply_rate_limit`, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ user_value: rateLimit.toString() }),
@@ -42,7 +42,7 @@ export default function RateLimitingPage() {
 
   const handleRevertRateLimit = async () => {
     try {
-      const response = await fetch("https://foolish-pig-72.telebit.io/revert_rate_limit", { method: "POST" });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/revert_rate_limit`, { method: "POST" });
       const data = await response.json();
 
       if (response.ok) {

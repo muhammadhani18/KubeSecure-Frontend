@@ -33,7 +33,7 @@ export default function TetragonPage() {
     setError(null)
 
     try {
-      const response = await fetch("https://foolish-pig-72.telebit.io/api/get-policies")
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get-policies`)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -83,7 +83,7 @@ export default function TetragonPage() {
       formData.append("policy_name", policyName)
       formData.append("command_name", policyCommand)
 
-      const response = await fetch("https://foolish-pig-72.telebit.io/api/enforce-policy", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/enforce-policy`, {
         method: "POST",
         body: formData,
       })
