@@ -30,7 +30,7 @@ export default function LoginPage() {
       if (!email || !password) {
         setError("Please enter both email and password")
         setIsLoading(false)
-        return
+        return;
       }
 
       // For demo purposes, accept any credentials
