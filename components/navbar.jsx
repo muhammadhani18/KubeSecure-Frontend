@@ -23,7 +23,7 @@ export function Navbar() {
   const pathname = usePathname()
 
   const navItems = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/ratelimiting", label: "Rate Limiting", icon: Gauge },
     { href: "/tetragon", label: "Tetragon", icon: Shield },
     { href: "/code-smells", label: "k8s Code Smells", icon: FileCode },
