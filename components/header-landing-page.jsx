@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 const HeaderLandingPage = () => {
   return (
@@ -8,7 +9,7 @@ const HeaderLandingPage = () => {
         <div className="container flex h-14 items-center px-6 md:px-8">
           <div className="flex items-center gap-2 font-semibold">
             <Link href="/" className="flex items-center gap-2">
-              <Layers className="h-6 w-6 text-primary" />
+              <Image src="logo.svg" alt="KubeSecure Dashboard" width={40} height={40} />
               <span>KubeSecure</span>
             </Link>
           </div>
