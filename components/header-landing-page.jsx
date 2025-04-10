@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const Header = () => {
+const HeaderLandingPage = () => {
   return (
     <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center px-6 md:px-8">
@@ -15,7 +15,7 @@ const Header = () => {
           <nav className="flex flex-1 items-center justify-end space-x-1">
             <Link href="/login">
               <Button size="sm">
-                Logout
+                Login
               </Button>
             </Link>
           </nav>
@@ -24,4 +24,4 @@ const Header = () => {
   )
 }
 
-export default Header;
+export default HeaderLandingPage;
