@@ -58,10 +58,10 @@ export default function LandingPage() {
               <div className="relative h-[350px] w-full rounded-lg bg-muted/30 shadow-xl overflow-hidden border border-border">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-background/10"></div>
                 <Image
-                  src="/placeholder.svg?height=700&width=700"
+                  src="/favicon.ico"
                   alt="KubeSecure Dashboard"
-                  width={700}
-                  height={700}
+                  width={300}
+                  height={300}
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-70"></div>
@@ -78,7 +78,7 @@ export default function LandingPage() {
             <h2 className="text-xl font-medium text-muted-foreground">Trusted by leading organizations</h2>
           </div>
           <div className="flex flex-wrap justify-center gap-8 md:gap-12 lg:gap-16">
-            {["Acme Inc", "TechCorp", "CloudSys", "DataFlow", "KubeStack"].map((company) => (
+            {["Acme Inc", "TechCorp", "CloudSys", "DataFlow", "KubeStack", "CNCF"].map((company) => (
               <div key={company} className="flex items-center text-muted-foreground/70 font-semibold text-lg">
                 {company}
               </div>

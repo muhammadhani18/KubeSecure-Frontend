@@ -28,7 +28,7 @@ export function Navbar() {
     { href: "/tetragon", label: "Tetragon", icon: Shield },
     { href: "/code-smells", label: "k8s Code Smells", icon: FileCode },
     { href: "http://localhost:8080", label: "Grafana", icon: BarChart3 },
-    { href: "#", label: "Security", icon: Lock },
+    { href: "/security", label: "Security", icon: Lock },
     { href: "/alerts", label: "Alerts", icon: AlertCircle },
     
   ]

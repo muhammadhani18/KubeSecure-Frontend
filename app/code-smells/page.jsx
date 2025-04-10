@@ -1,27 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import Link from "next/link"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Activity,
-  AlertCircle,
-  Box,
-  Code,
-  Database,
-  FileCode,
-  Layers,
-  Network,
-  Server,
-  Shield,
-  Workflow,
-} from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import Header from "@/components/header"
+import { FileCode, Upload, AlertCircle, CheckCircle, Loader2, FileText } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
 import { Navbar } from "@/components/navbar"
+import Header from "@/components/header"
 
 // Sample YAML for demonstration
 const sampleYaml = `apiVersion: apps/v1
@@ -111,52 +98,112 @@ const detectCodeSmells = (yaml) => {
 }
 
 export default function CodeSmellsPage() {
-  const [yaml, setYaml] = useState(sampleYaml)
+  const [file, setFile] = useState(null)
   const [smells, setSmells] = useState([])
-  const [isChecking, setIsChecking] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [hasChecked, setHasChecked] = useState(false)
+  const fileInputRef = useRef(null)
+  const { toast } = useToast()
 
-  const handleCheck = () => {
-    setError(null)
-    setIsChecking(true)
-    setHasChecked(false)
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files?.[0]
+    if (selectedFile) {
+      if (!selectedFile.name.endsWith(".yaml") && !selectedFile.name.endsWith(".yml")) {
+        setError("Please select a YAML file (.yaml or .yml)")
+        setFile(null)
+        return
+      }
+      setFile(selectedFile)
+      setError(null)
+    }
+  }
 
-    // Simple validation
-    if (!yaml.trim()) {
-      setError("Please enter YAML content to check")
-      setIsChecking(false)
+  const handleDragOver = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const droppedFile = e.dataTransfer.files?.[0]
+    if (droppedFile) {
+      if (!droppedFile.name.endsWith(".yaml") && !droppedFile.name.endsWith(".yml")) {
+        setError("Please select a YAML file (.yaml or .yml)")
+        setFile(null)
+        return
+      }
+      setFile(droppedFile)
+      setError(null)
+    }
+  }
+
+  const handleAnalyze = async () => {
+    if (!file) {
+      setError("Please select a YAML file first")
       return
     }
 
-    // Simulate processing delay
-    setTimeout(() => {
-      try {
-        // In a real app, you would validate the YAML syntax here
-        const detectedSmells = detectCodeSmells(yaml)
-        setSmells(detectedSmells)
-        setHasChecked(true)
-        setIsChecking(false)
-      } catch (err) {
-        setError("Invalid YAML format. Please check your input.")
-        setIsChecking(false)
+    setIsLoading(true)
+    setError(null)
+    setSmells([])
+
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+
+      const response = await fetch("/api/detect-smells", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Failed to analyze YAML file")
       }
-    }, 1000)
+
+      const data = await response.json()
+      setSmells(data.smells || [])
+
+      toast({
+        title: "Analysis Complete",
+        description: `Found ${data.smells.length} code smells in your YAML file.`,
+      })
+    } catch (err) {
+      console.error("Error analyzing YAML:", err)
+      setError(err instanceof Error ? err.message : "An unknown error occurred")
+      toast({
+        title: "Analysis Failed",
+        description: err instanceof Error ? err.message : "An unknown error occurred",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleClear = () => {
-    setYaml("")
+  const handleClearFile = () => {
+    setFile(null)
     setSmells([])
     setError(null)
-    setHasChecked(false)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
   }
 
-  const handleUseSample = () => {
-    setYaml(sampleYaml)
-    setSmells([])
-    setError(null)
-    setHasChecked(false)
-  }
+  // Group smells by category
+  const groupedSmells = smells.reduce((acc, smell) => {
+    const match = smell.match(/\[(.*?)\]/)
+    const category = match ? match[1] : "Other"
+
+    if (!acc[category]) {
+      acc[category] = []
+    }
+
+    acc[category].push(smell)
+    return acc
+  }, {})
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -167,159 +214,223 @@ export default function CodeSmellsPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-semibold tracking-tight">Kubernetes YAML Code Smells</h1>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleUseSample}>
+              {/* <Button variant="outline" size="sm" onClick={handleUseSample}>
                 Use Sample
-              </Button>
+              </Button> */}
             </div>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>Check Your Kubernetes YAML</CardTitle>
-              <CardDescription>Paste your Kubernetes YAML to check for common issues and anti-patterns</CardDescription>
+              <CardTitle>Upload Kubernetes YAML</CardTitle>
+              <CardDescription>
+                Upload your Kubernetes YAML file to detect potential code smells and best practice violations
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent>
               {error && (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="mb-4">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Error</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
-              <Textarea
-                placeholder="Paste your Kubernetes YAML here..."
-                className="font-mono min-h-[300px]"
-                value={yaml}
-                onChange={(e) => setYaml(e.target.value)}
-              />
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center ${
+                  file ? "border-primary" : "border-border"
+                }`}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+              >
+                <input
+                  type="file"
+                  accept=".yaml,.yml"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  ref={fileInputRef}
+                />
 
-              <div className="flex flex-col sm:flex-row gap-2">
-                <Button onClick={handleCheck} disabled={isChecking} className="flex-1">
-                  {isChecking ? "Checking..." : "Check Smells"}
-                </Button>
-                <Button variant="outline" onClick={handleClear} className="flex-1">
-                  Clear
-                </Button>
+                {file ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center gap-2 text-primary">
+                      <FileText className="h-8 w-8" />
+                      <span className="text-lg font-medium">{file.name}</span>
+                    </div>
+                    <div className="flex justify-center gap-2">
+                      <Button variant="outline" onClick={handleClearFile}>
+                        Clear
+                      </Button>
+                      <Button onClick={handleAnalyze} disabled={isLoading}>
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Analyzing...
+                          </>
+                        ) : (
+                          <>
+                            <FileCode className="mr-2 h-4 w-4" />
+                            Analyze YAML
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="text-lg font-medium">Drag and drop your YAML file here</h3>
+                    <p className="text-sm text-muted-foreground">
+                      or{" "}
+                      <Button variant="link" className="p-0 h-auto" onClick={() => fileInputRef.current?.click()}>
+                        browse
+                      </Button>{" "}
+                      to upload
+                    </p>
+                    <p className="text-xs text-muted-foreground">Supports .yaml and .yml files</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {hasChecked && (
+          {smells.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Results</CardTitle>
-                <CardDescription>
-                  {smells.length > 0
-                    ? `Found ${smells.length} potential issue${smells.length === 1 ? "" : "s"} in your YAML`
-                    : "No issues found in your YAML"}
-                </CardDescription>
+                <CardTitle>Analysis Results</CardTitle>
+                <CardDescription>Found {smells.length} potential code smells in your Kubernetes YAML</CardDescription>
               </CardHeader>
               <CardContent>
-                {smells.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[200px]">Smell</TableHead>
-                        <TableHead>Description</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {smells.map((smell, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{smell.smell}</TableCell>
-                          <TableCell>{smell.description}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="flex items-center justify-center p-6 text-center">
-                    <div>
-                      <div className="flex justify-center">
-                        <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
-                          <svg
-                            className="h-6 w-6 text-green-600 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M5 13l4 4L19 7"
-                            ></path>
-                          </svg>
-                        </div>
+                <div className="space-y-6">
+                  {Object.entries(groupedSmells).map(([category, categorySmells]) => (
+                    <div key={category} className="space-y-2">
+                      <h3 className="text-lg font-medium flex items-center gap-2">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                          <span className="text-xs font-medium text-primary">{categorySmells.length}</span>
+                        </span>
+                        {category} Issues
+                      </h3>
+                      <div className="rounded-md border overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Description</TableHead>
+                              <TableHead className="w-[100px]">Severity</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {categorySmells.map((smell, index) => {
+                              // Extract the description part (after the category)
+                              const description = smell.replace(/\[.*?\]\s*/, "")
+
+                              // Determine severity based on category
+                              let severity = "Medium"
+                              if (category.includes("Security") || category.includes("Overprivileged")) {
+                                severity = "High"
+                              } else if (category.includes("Health") || category.includes("Resource")) {
+                                severity = "Medium"
+                              } else {
+                                severity = "Low"
+                              }
+
+                              return (
+                                <TableRow key={index}>
+                                  <TableCell>{description}</TableCell>
+                                  <TableCell>
+                                    <span
+                                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                        severity === "High"
+                                          ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                                          : severity === "Medium"
+                                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
+                                      }`}
+                                    >
+                                      {severity}
+                                    </span>
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
                       </div>
-                      <h3 className="mt-4 text-lg font-semibold">All Good!</h3>
-                      <p className="mt-2 text-sm text-muted-foreground">No code smells were detected in your YAML.</p>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </CardContent>
-              {smells.length > 0 && (
-                <CardFooter>
-                  <Button variant="outline" size="sm" className="w-full">
-                    Export Results
-                  </Button>
-                </CardFooter>
-              )}
+              <CardFooter>
+                <div className="text-sm text-muted-foreground">
+                  <p>
+                    These are potential issues that might need attention. Not all code smells are necessarily problems
+                    in every context.
+                  </p>
+                </div>
+              </CardFooter>
+            </Card>
+          )}
+
+          {smells.length === 0 && file && !isLoading && !error && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  No Code Smells Detected
+                </CardTitle>
+                <CardDescription>Your YAML file follows Kubernetes best practices</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">
+                  No issues were found in your Kubernetes YAML file. This is a good sign that your configuration follows
+                  best practices.
+                </p>
+              </CardContent>
             </Card>
           )}
 
           <Card>
             <CardHeader>
-              <CardTitle>Common Kubernetes YAML Code Smells</CardTitle>
-              <CardDescription>Best practices to follow when writing Kubernetes manifests</CardDescription>
+              <CardTitle>Common Kubernetes Code Smells</CardTitle>
+              <CardDescription>Learn about common anti-patterns in Kubernetes YAML files</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-lg border p-4">
-                    <div className="flex items-start gap-2">
-                      <FileCode className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-medium">Avoid 'latest' Tags</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Always specify exact versions for container images
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <div className="flex items-start gap-2">
-                      <FileCode className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-medium">Set Resource Limits</h3>
-                        <p className="text-sm text-muted-foreground">Define CPU and memory limits for all containers</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <div className="flex items-start gap-2">
-                      <FileCode className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-medium">Use Health Probes</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Configure liveness and readiness probes for better reliability
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="rounded-lg border p-4">
-                    <div className="flex items-start gap-2">
-                      <FileCode className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <h3 className="font-medium">Avoid Privileged Mode</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Don't use privileged containers unless absolutely necessary
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border p-4">
+                  <h3 className="font-medium mb-2">Using 'latest' Tag</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Using the 'latest' tag for container images makes deployments unpredictable and can lead to
+                    unexpected behavior.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <h3 className="font-medium mb-2">Missing Resource Limits</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Containers without resource limits can consume excessive resources and affect other workloads.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <h3 className="font-medium mb-2">Running as Root</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Containers running as root pose security risks if they are compromised.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <h3 className="font-medium mb-2">Missing Health Probes</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Without liveness and readiness probes, Kubernetes cannot properly manage container lifecycle.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <h3 className="font-medium mb-2">Privileged Containers</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Privileged containers have full access to the host, which is a significant security risk.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <h3 className="font-medium mb-2">Using Default Namespace</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Using the default namespace makes it harder to manage resources and apply proper access controls.
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -329,4 +440,3 @@ export default function CodeSmellsPage() {
     </div>
   )
 }
-
