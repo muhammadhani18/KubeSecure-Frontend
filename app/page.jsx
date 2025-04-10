@@ -58,10 +58,10 @@ export default function LandingPage() {
               <div className="relative h-[350px] w-full rounded-lg bg-muted/30 shadow-xl overflow-hidden border border-border">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-background/10"></div>
                 <Image
-                  src="/favicon.ico"
+                  src="k8s.svg"
                   alt="KubeSecure Dashboard"
-                  width={300}
-                  height={300}
+                  width={800}
+                  height={800}
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-70"></div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
               <div className="relative rounded-lg overflow-hidden border border-border shadow-xl">
                 <div className="aspect-video w-full max-w-lg bg-muted/50">
                   <div className="flex h-full items-center justify-center">
-                    <CloudCog className="h-24 w-24 text-primary/20" />
+                    <CloudCog className="h-500 w-500 text-primary/20" />
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-tr from-background/80 via-transparent to-transparent"></div>
