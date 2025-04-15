@@ -33,6 +33,7 @@ export function Navbar() {
     
   ]
 
+  
   return (
     <>
       {/* Mobile Navigation Button - Only visible on small screens */}
