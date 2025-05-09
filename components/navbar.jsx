@@ -28,7 +28,7 @@ export function Navbar() {
     { href: "/tetragon", label: "Tetragon", icon: Shield },
     { href: "/code-smells", label: "k8s Code Smells", icon: FileCode },
     { href: "http://profound-beagle-quietly.ngrok-free.app", label: "Grafana", icon: BarChart3 },
-    { href: "/security", label: "Security", icon: Lock },
+    { href: "/service-map", label: "Service Map", icon: Lock },
     { href: "/alerts", label: "Alerts", icon: AlertCircle },
     
   ]
