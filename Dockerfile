@@ -24,6 +24,13 @@ RUN npm ci --omit=dev
 # Use a minimal runtime image
 FROM node:23-alpine
 
+# Add dependencies for Trivy installation
+RUN apk add --no-cache curl ca-certificates tar
+
+# Install Trivy using the official script
+# Using a specific version for stability, update if necessary
+RUN curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin v0.52.2
+
 WORKDIR /app
 
 COPY --from=builder /app ./
