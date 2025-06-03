@@ -10,246 +10,61 @@ import { Network, Search, ZoomIn, ZoomOut, RefreshCw, Download, Layers } from 'l
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
 
-// Generate dummy data for our service map
-const generateDummyServiceMap = () => {
-  const nodes = []
-  const edges = []
-
-  // Create an ingress
-  nodes.push({
-    id: "ingress-main",
-    type: "ingress",
-    name: "main-ingress",
-    namespace: "default",
-  })
-
-  // Create frontend services and pods
-  nodes.push({
-    id: "svc-frontend",
-    type: "service",
-    name: "frontend",
-    namespace: "default",
-  })
-
-  for (let i = 1; i <= 3; i++) {
-    nodes.push({
-      id: `pod-frontend-${i}`,
-      type: "pod",
-      name: `frontend-pod-${i}`,
-      namespace: "default",
-      status: "Running",
-    })
-    edges.push({
-      source: "svc-frontend",
-      target: `pod-frontend-${i}`,
-      type: "service-to-pod",
-    })
-  }
-
-  // Connect ingress to frontend
-  edges.push({
-    source: "ingress-main",
-    target: "svc-frontend",
-    type: "ingress-to-service",
-  })
-
-  // Create API services and pods
-  nodes.push({
-    id: "svc-api",
-    type: "service",
-    name: "api-gateway",
-    namespace: "default",
-  })
-
-  for (let i = 1; i <= 2; i++) {
-    nodes.push({
-      id: `pod-api-${i}`,
-      type: "pod",
-      name: `api-gateway-pod-${i}`,
-      namespace: "default",
-      status: "Running",
-    })
-    edges.push({
-      source: "svc-api",
-      target: `pod-api-${i}`,
-      type: "service-to-pod",
-    })
-  }
-
-  // Connect frontend to API
-  edges.push({
-    source: "svc-frontend",
-    target: "svc-api",
-    type: "service-to-service",
-  })
-
-  // Create auth service and pods
-  nodes.push({
-    id: "svc-auth",
-    type: "service",
-    name: "auth-service",
-    namespace: "auth",
-  })
-
-  for (let i = 1; i <= 2; i++) {
-    nodes.push({
-      id: `pod-auth-${i}`,
-      type: "pod",
-      name: `auth-service-pod-${i}`,
-      namespace: "auth",
-      status: "Running",
-    })
-    edges.push({
-      source: "svc-auth",
-      target: `pod-auth-${i}`,
-      type: "service-to-pod",
-    })
-  }
-
-  // Connect API to auth
-  edges.push({
-    source: "svc-api",
-    target: "svc-auth",
-    type: "service-to-service",
-  })
-
-  // Create database service and pods
-  nodes.push({
-    id: "svc-db",
-    type: "service",
-    name: "database",
-    namespace: "data",
-  })
-
-  for (let i = 1; i <= 2; i++) {
-    nodes.push({
-      id: `pod-db-${i}`,
-      type: "pod",
-      name: `database-pod-${i}`,
-      namespace: "data",
-      status: i === 1 ? "Running" : "Pending",
-    })
-    edges.push({
-      source: "svc-db",
-      target: `pod-db-${i}`,
-      type: "service-to-pod",
-    })
-  }
-
-  // Connect API to database
-  edges.push({
-    source: "svc-api",
-    target: "svc-db",
-    type: "service-to-service",
-  })
-
-  // Create cache service and pods
-  nodes.push({
-    id: "svc-cache",
-    type: "service",
-    name: "redis-cache",
-    namespace: "data",
-  })
-
-  for (let i = 1; i <= 3; i++) {
-    nodes.push({
-      id: `pod-cache-${i}`,
-      type: "pod",
-      name: `redis-cache-pod-${i}`,
-      namespace: "data",
-      status: "Running",
-    })
-    edges.push({
-      source: "svc-cache",
-      target: `pod-cache-${i}`,
-      type: "service-to-pod",
-    })
-  }
-
-  // Connect API to cache
-  edges.push({
-    source: "svc-api",
-    target: "svc-cache",
-    type: "service-to-service",
-  })
-
-  // Create monitoring service and pods
-  nodes.push({
-    id: "svc-monitoring",
-    type: "service",
-    name: "prometheus",
-    namespace: "monitoring",
-  })
-
-  for (let i = 1; i <= 1; i++) {
-    nodes.push({
-      id: `pod-monitoring-${i}`,
-      type: "pod",
-      name: `prometheus-pod-${i}`,
-      namespace: "monitoring",
-      status: "Running",
-    })
-    edges.push({
-      source: "svc-monitoring",
-      target: `pod-monitoring-${i}`,
-      type: "service-to-pod",
-    })
-  }
-
-  // Create logging service and pods
-  nodes.push({
-    id: "svc-logging",
-    type: "service",
-    name: "elasticsearch",
-    namespace: "logging",
-  })
-
-  for (let i = 1; i <= 2; i++) {
-    nodes.push({
-      id: `pod-logging-${i}`,
-      type: "pod",
-      name: `elasticsearch-pod-${i}`,
-      namespace: "logging",
-      status: "Running",
-    })
-    edges.push({
-      source: "svc-logging",
-      target: `pod-logging-${i}`,
-      type: "service-to-pod",
-    })
-  }
-
-  // Add some config maps and secrets
-  nodes.push({
-    id: "cm-api-config",
-    type: "configmap",
-    name: "api-config",
-    namespace: "default",
-  })
-
-  nodes.push({
-    id: "secret-db-creds",
-    type: "secret",
-    name: "db-credentials",
-    namespace: "data",
-  })
-
-  return { nodes, edges }
-}
-
 export default function ServiceMapPage() {
   const canvasRef = useRef(null)
-  const [serviceMap, setServiceMap] = useState(generateDummyServiceMap())
+  const [serviceMap, setServiceMap] = useState({ nodes: [], edges: [] })
   const [selectedNode, setSelectedNode] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [zoomLevel, setZoomLevel] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true) // Start with loading true
   const [activeNamespace, setActiveNamespace] = useState("all")
   const [activeTab, setActiveTab] = useState("map")
+  const [error, setError] = useState(null)
 
-  // Initialize the canvas and start the simulation
+
+  const fetchServiceMapData = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/service-map`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setServiceMap(data)
+    } catch (e) {
+      console.error("Failed to fetch service map data:", e)
+      setError(e.message)
+      setServiceMap({ nodes: [], edges: [] }) // Clear map on error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fetch initial data
   useEffect(() => {
-    if (!canvasRef.current) return
+    fetchServiceMapData()
+  }, [])
+
+  // Simulation and drawing effect
+  useEffect(() => {
+    if (!canvasRef.current || serviceMap.nodes.length === 0) {
+      // Clear canvas if no data or canvas not ready
+      if (canvasRef.current) {
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext("2d")
+        if (ctx) {
+           const rect = canvas.parentElement?.getBoundingClientRect()
+            if (rect) {
+              canvas.width = rect.width
+              canvas.height = rect.height
+            }
+          ctx.clearRect(0, 0, canvas.width, canvas.height)
+        }
+      }
+      return
+    }
 
     const canvas = canvasRef.current
     const ctx = canvas.getContext("2d")
@@ -281,6 +96,7 @@ export default function ServiceMapPage() {
       ingress: "#f59e0b", // Amber
       configmap: "#6b7280", // Gray
       secret: "#ef4444", // Red
+      default: "#9ca3af", // Default gray for unknown types
     }
 
     // Assign radius based on node type
@@ -291,22 +107,26 @@ export default function ServiceMapPage() {
       ingress: 22,
       configmap: 15,
       secret: 15,
+      default: 10,
     }
 
-    // Initialize node positions in a circle
+    // Initialize node positions (or keep existing if nodes are already positioned)
+    // This part might need adjustment if you want to preserve positions across refreshes
+    // For simplicity, we re-initialize positions each time serviceMap changes.
     const nodes = serviceMap.nodes.map((node, i) => {
-      const angle = (i / serviceMap.nodes.length) * 2 * Math.PI
-      const radius = 200
+      const angle = (i / Math.max(1, serviceMap.nodes.length)) * 2 * Math.PI // Avoid division by zero
+      const radius = Math.min(width, height) * 0.3 // Adjust distribution radius
       return {
         ...node,
-        x: centerX + radius * Math.cos(angle),
-        y: centerY + radius * Math.sin(angle),
+        x: node.x || centerX + radius * Math.cos(angle), // Use existing x/y if available
+        y: node.y || centerY + radius * Math.sin(angle),
         vx: 0,
         vy: 0,
-        radius: nodeRadius[node.type],
-        color: nodeColors[node.type],
+        radius: nodeRadius[node.type] || nodeRadius.default,
+        color: nodeColors[node.type] || nodeColors.default,
       }
     })
+
 
     // Create a map of node IDs to nodes for quick lookup
     const nodeMap = new Map()
@@ -319,8 +139,8 @@ export default function ServiceMapPage() {
     const attractionForce = 0.01
     const maxSpeed = 1
     const damping = 0.95
-    let simulationActive = true
-    let simulationCooldown = 3 // Cooling counter
+    let simulationActive = true // Keep simulation active for a bit longer or manage differently
+    let simulationCooldown = 150 // Start with a higher cooldown to allow settling
 
     // Animation loop
     let animationFrameId
@@ -343,7 +163,8 @@ export default function ServiceMapPage() {
             if (node.id !== otherNode.id) {
               const dx = node.x - otherNode.x
               const dy = node.y - otherNode.y
-              const distance = Math.sqrt(dx * dx + dy * dy)
+              let distance = Math.sqrt(dx * dx + dy * dy)
+              distance = distance === 0 ? 0.1 : distance; // prevent division by zero
               const minDistance = (node.radius + otherNode.radius) * 3
 
               if (distance < minDistance) {
@@ -356,16 +177,20 @@ export default function ServiceMapPage() {
 
           // Apply attraction forces along edges
           serviceMap.edges.forEach((edge) => {
-            if (edge.source === node.id) {
-              const targetNode = nodeMap.get(edge.target)
+            // The API returns 'from' and 'to' instead of 'source' and 'target'
+            const sourceNodeId = edge.from || edge.source;
+            const targetNodeId = edge.to || edge.target;
+
+            if (sourceNodeId === node.id) {
+              const targetNode = nodeMap.get(targetNodeId)
               if (targetNode) {
                 const dx = targetNode.x - node.x
                 const dy = targetNode.y - node.y
                 node.vx += dx * attractionForce
                 node.vy += dy * attractionForce
               }
-            } else if (edge.target === node.id) {
-              const sourceNode = nodeMap.get(edge.source)
+            } else if (targetNodeId === node.id) {
+              const sourceNode = nodeMap.get(sourceNodeId)
               if (sourceNode) {
                 const dx = sourceNode.x - node.x
                 const dy = sourceNode.y - node.y
@@ -379,8 +204,8 @@ export default function ServiceMapPage() {
           const dx = centerX - node.x
           const dy = centerY - node.y
           const distance = Math.sqrt(dx * dx + dy * dy)
-          node.vx += dx * 0.0001 * distance // Reduced from 0.0005
-          node.vy += dy * 0.0001 * distance // Reduced from 0.0005
+          node.vx += dx * 0.0001 * distance
+          node.vy += dy * 0.0001 * distance
 
           // Apply damping and limit speed
           node.vx *= damping
@@ -403,47 +228,50 @@ export default function ServiceMapPage() {
           if (node.x > width - margin) node.x = width - margin
           if (node.y < margin) node.y = margin
           if (node.y > height - margin) node.y = margin
-          if (node.y > height - margin) node.y = height - margin
 
-          // Track total movement for stabilization
           totalMovement += Math.abs(node.vx) + Math.abs(node.vy)
         })
 
-        // Check if simulation should stabilize
-        if (totalMovement < 0.5) {
+        if (totalMovement < 0.5 && nodes.length > 0) { // Add check for nodes.length
           simulationCooldown -= 1
           if (simulationCooldown <= 0) {
             simulationActive = false
             console.log("Simulation stabilized")
           }
         } else {
-          // Reset cooldown if there's significant movement
-          simulationCooldown = 100
+          simulationCooldown = 150 // Reset cooldown
         }
       }
 
       // Draw edges
       ctx.lineWidth = 1.5
       serviceMap.edges.forEach((edge) => {
-        const sourceNode = nodeMap.get(edge.source)
-        const targetNode = nodeMap.get(edge.target)
+        const sourceNodeId = edge.from || edge.source; // API uses 'from'
+        const targetNodeId = edge.to || edge.target;   // API uses 'to'
+        const sourceNode = nodeMap.get(sourceNodeId)
+        const targetNode = nodeMap.get(targetNodeId)
+
         if (sourceNode && targetNode) {
           ctx.beginPath()
           ctx.moveTo(sourceNode.x, sourceNode.y)
 
-          // Draw different line styles based on edge type
-          if (edge.type === "service-to-pod") {
+          // Define edge styles based on type (adjust as needed)
+          // These types should match what your FastAPI backend provides
+          if (edge.type === "selector") { // Service to Pod
             ctx.setLineDash([])
-            ctx.strokeStyle = "rgba(71, 180, 255, 0.5)" // Blue with transparency
-          } else if (edge.type === "service-to-service") {
+            ctx.strokeStyle = "rgba(71, 180, 255, 0.5)"
+          } else if (edge.type === "manages") { // Deployment to Service (example)
             ctx.setLineDash([5, 5])
-            ctx.strokeStyle = "rgba(139, 92, 246, 0.5)" // Purple with transparency
-          } else if (edge.type === "ingress-to-service") {
+            ctx.strokeStyle = "rgba(139, 92, 246, 0.5)"
+          } else if (edge.type === "route") { // Ingress to Service
             ctx.setLineDash([])
-            ctx.strokeStyle = "rgba(245, 158, 11, 0.5)" // Amber with transparency
+            ctx.strokeStyle = "rgba(245, 158, 11, 0.5)"
+          } else if (edge.type === "mount") { // Pod to ConfigMap/Secret
+             ctx.setLineDash([2,2])
+             ctx.strokeStyle = "rgba(107, 114, 128, 0.4)"
           } else {
             ctx.setLineDash([])
-            ctx.strokeStyle = "rgba(107, 114, 128, 0.3)" // Gray with transparency
+            ctx.strokeStyle = "rgba(107, 114, 128, 0.3)"
           }
 
           ctx.lineTo(targetNode.x, targetNode.y)
@@ -453,9 +281,11 @@ export default function ServiceMapPage() {
           // Draw arrow for direction
           const angle = Math.atan2(targetNode.y - sourceNode.y, targetNode.x - sourceNode.x)
           const arrowLength = 10
-          const arrowWidth = 5
-          const arrowX = targetNode.x - (targetNode.radius + arrowLength) * Math.cos(angle)
-          const arrowY = targetNode.y - (targetNode.radius + arrowLength) * Math.sin(angle)
+          // const arrowWidth = 5 // Not used
+          const targetRadius = targetNode.radius || nodeRadius.default; // Ensure radius exists
+          const arrowX = targetNode.x - (targetRadius + arrowLength) * Math.cos(angle)
+          const arrowY = targetNode.y - (targetRadius + arrowLength) * Math.sin(angle)
+
 
           ctx.beginPath()
           ctx.moveTo(arrowX, arrowY)
@@ -475,85 +305,65 @@ export default function ServiceMapPage() {
 
       // Draw nodes
       nodes.forEach((node) => {
-        // Skip nodes that don't match the namespace filter
         if (activeNamespace !== "all" && node.namespace !== activeNamespace) {
           return
         }
 
-        // Skip nodes that don't match the search term
         if (searchTerm && !node.name.toLowerCase().includes(searchTerm.toLowerCase())) {
           return
         }
 
         ctx.beginPath()
-        ctx.arc(node.x, node.y, node.radius * zoomLevel, 0, 2 * Math.PI)
+        const currentRadius = (node.radius || nodeRadius.default) * zoomLevel;
+        ctx.arc(node.x, node.y, currentRadius, 0, 2 * Math.PI)
 
-        // Highlight selected node
         if (selectedNode && selectedNode.id === node.id) {
           ctx.strokeStyle = "#ffffff"
           ctx.lineWidth = 3
           ctx.stroke()
         }
 
-        // Fill based on node type
-        ctx.fillStyle = node.color
+        ctx.fillStyle = node.color || nodeColors.default;
         ctx.fill()
 
-        // Draw node label
         ctx.font = `${12 * zoomLevel}px sans-serif`
         ctx.fillStyle = "#ffffff"
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
 
-        // Draw different icons based on node type
-        if (node.type === "service") {
-          // Draw a network icon
-          ctx.fillText("S", node.x, node.y)
-        } else if (node.type === "pod") {
-          // Draw a container icon
-          ctx.fillText("P", node.x, node.y)
-        } else if (node.type === "ingress") {
-          // Draw an ingress icon
-          ctx.fillText("I", node.x, node.y)
-        } else if (node.type === "configmap") {
-          // Draw a config icon
-          ctx.fillText("C", node.x, node.y)
-        } else if (node.type === "secret") {
-          // Draw a lock icon
-          ctx.fillText("S", node.x, node.y)
-        }
+        const typeInitial = node.type ? node.type.charAt(0).toUpperCase() : '?';
+        ctx.fillText(typeInitial, node.x, node.y)
 
-        // Draw node name below the node
         ctx.font = `${10 * zoomLevel}px sans-serif`
-        ctx.fillStyle = "#e2e8f0"
-        ctx.fillText(node.name, node.x, node.y + node.radius * 2)
+        ctx.fillStyle = "#e2e8f0" // Light gray for text
+        ctx.fillText(node.name, node.x, node.y + currentRadius + 10 * zoomLevel) // Position below node
       })
 
       animationFrameId = requestAnimationFrame(simulate)
     }
 
-    // Start simulation
     simulate()
 
-    // Handle mouse interactions
     const handleMouseDown = (e) => {
       const rect = canvas.getBoundingClientRect()
       const mouseX = e.clientX - rect.left
       const mouseY = e.clientY - rect.top
 
-      // Check if a node was clicked
       for (const node of nodes) {
         const dx = mouseX - node.x
         const dy = mouseY - node.y
         const distance = Math.sqrt(dx * dx + dy * dy)
+        const currentRadius = (node.radius || nodeRadius.default) * zoomLevel;
 
-        if (distance < node.radius * zoomLevel) {
+
+        if (distance < currentRadius) {
           isDragging = true
           draggedNode = node
           lastMouseX = mouseX
           lastMouseY = mouseY
           setSelectedNode(node)
-          restartSimulation() // Restart simulation when dragging
+          simulationActive = true // Reactivate simulation on drag
+          simulationCooldown = 150
           break
         }
       }
@@ -565,28 +375,33 @@ export default function ServiceMapPage() {
         const mouseX = e.clientX - rect.left
         const mouseY = e.clientY - rect.top
 
+        // Update node's stored position for next render
         draggedNode.x += mouseX - lastMouseX
         draggedNode.y += mouseY - lastMouseY
-    }
 
         lastMouseX = mouseX
         lastMouseY = mouseY
       }
+    }
 
     const handleMouseUp = () => {
       isDragging = false
       draggedNode = null
     }
 
-    const restartSimulation = () => {
-      simulationActive = true
-      simulationCooldown = 100
-    }
+    // Function to restart simulation (can be called by refresh button for example)
+    // This is implicitly handled by the useEffect re-running when serviceMap changes.
+    // However, if you want an explicit restart button for the simulation itself:
+    // const restartSimulation = () => {
+    //   simulationActive = true;
+    //   simulationCooldown = 150;
+    //   // Re-initialize node positions if desired, or let them continue from current
+    // };
 
     canvas.addEventListener("mousedown", handleMouseDown)
     canvas.addEventListener("mousemove", handleMouseMove)
     canvas.addEventListener("mouseup", handleMouseUp)
-    canvas.addEventListener("mouseleave", handleMouseUp)
+    canvas.addEventListener("mouseleave", handleMouseUp) // Stop dragging if mouse leaves canvas
 
     return () => {
       cancelAnimationFrame(animationFrameId)
@@ -596,30 +411,28 @@ export default function ServiceMapPage() {
       canvas.removeEventListener("mouseup", handleMouseUp)
       canvas.removeEventListener("mouseleave", handleMouseUp)
     }
-  }, [serviceMap, zoomLevel, searchTerm, activeNamespace, selectedNode])
+  }, [serviceMap, zoomLevel, searchTerm, activeNamespace, selectedNode]) // Rerun when these change
 
-  // Get unique namespaces for filtering
-  const namespaces = ["all", ...new Set(serviceMap.nodes.map((node) => node.namespace))]
 
-  // Handle refresh
+  const namespaces = ["all", ...new Set(serviceMap.nodes.map((node) => node.namespace).filter(Boolean))]
+
   const handleRefresh = () => {
-    setIsLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      setServiceMap(generateDummyServiceMap())
-      setIsLoading(false)
-      if (canvasRef.current) {
-        const canvas = canvasRef.current
-        const ctx = canvas.getContext("2d")
+    fetchServiceMapData()
+    // Optionally, explicitly restart simulation if needed, though data change should trigger it
+    if (canvasRef.current) {
+        // This logic might be better inside the simulation useEffect or handled by its re-trigger
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
         if (ctx) {
-          simulationActive = true
-          simulationCooldown = 100
+            // Accessing these variables directly here is not ideal.
+            // Consider managing simulation state (active, cooldown) via useState if needed outside useEffect.
+            // For now, changing serviceMap should re-trigger the simulation effect.
+            // simulationActive = true;
+            // simulationCooldown = 150;
         }
-      }
-    }, 1000)
+    }
   }
 
-  // Handle zoom
   const handleZoomIn = () => {
     setZoomLevel((prev) => Math.min(prev + 0.1, 2))
   }
@@ -627,6 +440,18 @@ export default function ServiceMapPage() {
   const handleZoomOut = () => {
     setZoomLevel((prev) => Math.max(prev - 0.1, 0.5))
   }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background text-destructive p-4">
+        <h1 className="text-2xl font-semibold mb-4">Error loading Service Map</h1>
+        <p className="mb-2">Could not fetch data from the backend.</p>
+        <p className="text-sm bg-destructive/10 p-2 rounded mb-4">{error}</p>
+        <Button onClick={handleRefresh}>Try Again</Button>
+      </div>
+    );
+  }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
