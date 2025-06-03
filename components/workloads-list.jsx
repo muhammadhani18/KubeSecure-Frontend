@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link" // Added Link import
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { CheckCircle, Clock, Filter, Layers, Search, Server, X } from "lucide-react"
+import { CheckCircle, Clock, Filter, Layers, Search, Server, X, Shield } from "lucide-react" // Added Shield import
 
 export function WorkloadsList({ namespaces }) {
   const [searchTerm, setSearchTerm] = useState("")
@@ -206,6 +207,7 @@ export function WorkloadsList({ namespaces }) {
                         <TableHead>Node</TableHead>
                         <TableHead>IP</TableHead>
                         <TableHead>Containers</TableHead>
+                        <TableHead>Actions</TableHead {/* New Header */}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -217,12 +219,22 @@ export function WorkloadsList({ namespaces }) {
                           <TableCell>{pod.ip || "N/A"}</TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
-                              {pod.containers.map((container, i) => (
+                              {pod.containers && Array.isArray(pod.containers) && pod.containers.map((container, i) => (
                                 <Badge key={i} variant="secondary" className="max-w-[150px] truncate">
                                   {container}
                                 </Badge>
                               ))}
                             </div>
+                          </TableCell>
+                          <TableCell> {/* New Cell for Actions */}
+                            {pod.containers && Array.isArray(pod.containers) && pod.containers.map((containerName, k) => (
+                              <Link key={k} href={`/vulnerability-scanner?image_name=${encodeURIComponent(containerName)}`} passHref>
+                                <Button variant="outline" size="sm" className="mr-2 mb-2">
+                                  <Shield className="h-4 w-4 mr-1" />
+                                  Scan
+                                </Button>
+                              </Link>
+                            ))}
                           </TableCell>
                         </TableRow>
                       ))}
