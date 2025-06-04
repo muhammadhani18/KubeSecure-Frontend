@@ -16,6 +16,7 @@ import {
   Lock,
   Menu,
   Shield,
+  DollarSign,
 } from "lucide-react"
 
 export function Navbar() {
@@ -28,6 +29,7 @@ export function Navbar() {
     { href: "/tetragon", label: "Tetragon", icon: Lock },
     { href: "/vulnerability-scanner", label: "Image Scanner", icon: Shield },
     { href: "/code-smells", label: "k8s Code Smells", icon: FileCode },
+    { href: "/cost-management", label: "Cost Management", icon: DollarSign },
     { href: "http://profound-beagle-quietly.ngrok-free.app", label: "Grafana", icon: BarChart3 },
     { href: "/service-map", label: "Service Map", icon: Boxes },
     { href: "/alerts", label: "Alerts", icon: AlertCircle },
