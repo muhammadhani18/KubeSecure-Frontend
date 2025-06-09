@@ -7,9 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { AlertCircle, Bell } from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import Header from "@/components/header";
+import { useRouter } from "next/navigation";
 
 // Fetch alerts from API
 async function getAlerts() {
+  
+  
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/get-alerts`); // Ensure this matches your API route
     if (!response.ok) throw new Error("Failed to fetch alerts");
@@ -41,6 +44,14 @@ function formatDate(dateString) {
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
 
+  const router = useRouter();
+  
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
   useEffect(() => {
     async function fetchData() {
       const data = await getAlerts();

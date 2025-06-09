@@ -11,6 +11,8 @@ import { ResourceUsage } from "@/components/resource-usage";
 import { NamespaceList } from "@/components/namespace-list";
 import { DashboardTabs } from "@/components/dashboard-tabs";
 import Header from "@/components/header";
+import { useRouter } from "next/navigation";
+
 
 // Fetch Cluster Info (Client Side)
 async function fetchClusterInfo() {
@@ -38,7 +40,15 @@ async function fetchClusterInfo() {
 export default function Home() {
   const [clusterInfo, setClusterInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const router = useRouter();
+  
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
+  
   // Fetch data initially and every 1 hour
   useEffect(() => {
     const getData = async () => {

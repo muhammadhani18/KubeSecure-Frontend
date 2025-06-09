@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef,useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -9,6 +9,7 @@ import { FileCode, Upload, AlertCircle, CheckCircle, Loader2, FileText } from "l
 import { useToast } from "@/components/ui/use-toast"
 import { Navbar } from "@/components/navbar"
 import Header from "@/components/header"
+import { useRouter } from "next/navigation";
 
 // Sample YAML for demonstration
 const sampleYaml = `apiVersion: apps/v1
@@ -105,6 +106,15 @@ export default function CodeSmellsPage() {
   const fileInputRef = useRef(null)
   const { toast } = useToast()
 
+  const router = useRouter();
+  
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
+  
   const handleFileChange = (e) => {
     const selectedFile = e.target.files?.[0]
     if (selectedFile) {

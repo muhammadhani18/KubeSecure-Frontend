@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Navbar } from "@/components/navbar"
 import Header from "@/components/header"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function ServiceMapPage() {
   const canvasRef = useRef(null)
@@ -23,7 +24,14 @@ export default function ServiceMapPage() {
   const [activeTab, setActiveTab] = useState("map")
   const [error, setError] = useState(null)
 
-
+  const router = useRouter();
+  
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
   const fetchServiceMapData = async () => {
     setIsLoading(true)
     setError(null)

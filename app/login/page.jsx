@@ -52,7 +52,7 @@ export default function LoginPage() {
 
       // Store the token in localStorage
       sessionStorage.setItem("token", data.access_token)
-
+      
       // Show success message
       toast({
         title: "Login successful",

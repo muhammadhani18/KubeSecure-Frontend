@@ -87,10 +87,10 @@ export default function CostManagementPage() {
       "name": "frontend-app-7b5b9d7c9c-xl2v5",
       "namespace": "production",
       "nodeName": "node-1",
-      "status": "Running",
       "containers": [
         {
           "name": "nginx-container",
+          "status": "Running",
           "image": "nginx:latest",
           "resources": {
             "requests": { "cpu": "100m", "memory": "128Mi" },

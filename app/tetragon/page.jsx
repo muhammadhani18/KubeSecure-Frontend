@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Navbar } from "@/components/navbar"
 import { useToast } from "@/components/ui/use-toast"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useRouter } from "next/navigation"
 
 export default function TetragonPage() {
   const [policies, setPolicies] = useState([])
@@ -21,7 +22,14 @@ export default function TetragonPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const { toast } = useToast()
-
+  const router = useRouter();
+  
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
   // Fetch policies on component mount
   useEffect(() => {
     fetchPolicies()

@@ -10,6 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/navbar";
 import Header from "@/components/header";
+import { useRouter } from "next/navigation";
 
 export default function RateLimitingPage() {
   const [rateLimit, setRateLimit] = useState(100);
@@ -18,6 +19,15 @@ export default function RateLimitingPage() {
   const [message, setMessage] = useState(null);
   const [details, setDetails] = useState(null); // For limit-rps, limit-burst, etc.
 
+  const router = useRouter();
+  
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
+  
   // Fetch status on initial load
   useEffect(() => {
     const fetchStatus = async () => {

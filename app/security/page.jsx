@@ -29,6 +29,8 @@ import {
   XCircle,
 } from "lucide-react"
 import Header from "@/components/header"
+import { useRouter } from "next/navigation";
+
 
 // Mock data for the security page
 const securityScore = 78
@@ -170,7 +172,14 @@ function getStatusBadge(status) {
 export default function SecurityPage() {
   const [isScanning, setIsScanning] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
-
+  const router = useRouter();
+  
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+    }
+  }, []);
   const handleScan = () => {
     setIsScanning(true)
     // Simulate scan completion after 3 seconds
