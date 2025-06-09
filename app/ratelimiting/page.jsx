@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Layers } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Navbar } from "@/components/navbar";
 import Header from "@/components/header";
@@ -16,7 +15,33 @@ export default function RateLimitingPage() {
   const [rateLimit, setRateLimit] = useState(100);
   const [appliedLimit, setAppliedLimit] = useState(null);
   const [isApplied, setIsApplied] = useState(false);
-  const [message, setMessage] = useState(null); // To show success/error messages
+  const [message, setMessage] = useState(null);
+  const [details, setDetails] = useState(null); // For limit-rps, limit-burst, etc.
+
+  // Fetch status on initial load
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/check_rate_limit`);
+        const json = await response.json();
+
+        const data = json[0]; // response format: [ {...}, 200 ]
+        if (data.rate_limiting_applied) {
+          setIsApplied(true);
+          setDetails(data.details);
+          setAppliedLimit(Number(data.details["limit-rps"]));
+        } else {
+          setIsApplied(false);
+          setDetails(null);
+          setAppliedLimit(null);
+        }
+      } catch (error) {
+        setMessage({ type: "error", text: "Failed to fetch rate limiting status." });
+      }
+    };
+
+    fetchStatus();
+  }, []);
 
   const handleApplyRateLimit = async () => {
     try {
@@ -31,6 +56,11 @@ export default function RateLimitingPage() {
       if (response.ok) {
         setAppliedLimit(rateLimit);
         setIsApplied(true);
+        setDetails({
+          "limit-rps": rateLimit,
+          "limit-burst": rateLimit + 10,
+          "limit-connections": rateLimit + 20,
+        });
         setMessage({ type: "success", text: "Rate limiting applied successfully!" });
       } else {
         throw new Error(data.error || "Failed to apply rate limiting.");
@@ -42,12 +72,15 @@ export default function RateLimitingPage() {
 
   const handleRevertRateLimit = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/revert_rate_limit`, { method: "POST" });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/revert_rate_limit`, {
+        method: "POST",
+      });
       const data = await response.json();
 
       if (response.ok) {
         setIsApplied(false);
         setAppliedLimit(null);
+        setDetails(null);
         setMessage({ type: "success", text: "Rate limiting reverted successfully!" });
       } else {
         throw new Error(data.error || "Failed to revert rate limiting.");
@@ -59,7 +92,7 @@ export default function RateLimitingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Header/>
+      <Header />
 
       <div className="container flex-1 items-start py-8 px-6 md:px-8 md:grid md:grid-cols-[220px_1fr] md:gap-8 lg:grid-cols-[240px_1fr] lg:gap-12">
         <Navbar />
@@ -77,7 +110,9 @@ export default function RateLimitingPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Rate Limit Configuration</CardTitle>
-                  <CardDescription>Set and manage rate limits for your Kubernetes API server</CardDescription>
+                  <CardDescription>
+                    Set and manage rate limits for your Kubernetes API server
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
@@ -121,9 +156,12 @@ export default function RateLimitingPage() {
                     </Button>
                   </div>
 
-                  {/* Success/Error Message */}
                   {message && (
-                    <div className={`mt-4 text-sm font-medium ${message.type === "success" ? "text-green-500" : "text-red-500"}`}>
+                    <div
+                      className={`mt-4 text-sm font-medium ${
+                        message.type === "success" ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
                       {message.text}
                     </div>
                   )}
@@ -133,7 +171,9 @@ export default function RateLimitingPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Current Status</CardTitle>
-                  <CardDescription>Current rate limiting configuration and status</CardDescription>
+                  <CardDescription>
+                    Current rate limiting configuration and status
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -149,14 +189,22 @@ export default function RateLimitingPage() {
                         </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-muted-foreground">Current Limit</p>
-                        <p className="font-medium">{appliedLimit ? `${appliedLimit} req/s` : "No limit applied"}</p>
+                        <p className="text-sm font-medium text-muted-foreground">Limit RPS</p>
+                        <p className="font-medium">{details?.["limit-rps"] ?? "N/A"}</p>
                       </div>
                       <div className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">Limit Burst</p>
+                        <p className="font-medium">{details?.["limit-burst"] ?? "N/A"}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-muted-foreground">Limit Connections</p>
+                        <p className="font-medium">{details?.["limit-connections"] ?? "N/A"}</p>
+                      </div>
+                      <div className="space-y-1 col-span-2">
                         <p className="text-sm font-medium text-muted-foreground">Applied At</p>
                         <p className="font-medium">{isApplied ? new Date().toLocaleString() : "N/A"}</p>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1 col-span-2">
                         <p className="text-sm font-medium text-muted-foreground">Applied By</p>
                         <p className="font-medium">{isApplied ? "admin@example.com" : "N/A"}</p>
                       </div>
