@@ -23,7 +23,28 @@ export default function TetragonPage() {
   const [error, setError] = useState(null)
   const { toast } = useToast()
   const router = useRouter();
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+
+  const fetchEvents = async () => {
+    setEventsLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events?minutes=10`);
+      const jsonData = await response.json();
+      setEvents(jsonData);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      setEvents([]);
+    } finally {
+      setEventsLoading(false);
+    }
+  };
   
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     if (!token) {
@@ -126,6 +147,48 @@ export default function TetragonPage() {
     }
   }
 
+
+  const handleDelete = async (name) => {
+    if (!confirm(`Delete policy "${name}"? This cannot be undone.`)) return;
+  
+    setIsLoading(true);
+    setError(null);
+  
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/delete-policy`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ policy_name: name }),
+        }
+      );
+  
+      if (!res.ok) {
+        const { detail } = await res.json();
+        throw new Error(detail || "Failed to delete policy");
+      }
+  
+      toast({
+        title: "Policy deleted",
+        description: `Tracing policy "${name}" removed from the cluster.`,
+      });
+  
+      fetchPolicies();          // refresh table
+    } catch (err) {
+      console.error("Delete error:", err);
+      setError(err.message);
+      toast({
+        title: "Error deleting policy",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -222,10 +285,15 @@ export default function TetragonPage() {
                             <TableCell>{policy.match_commands}</TableCell>
                             <TableCell>{policy.actions}</TableCell>
                             <TableCell className="text-right">
-                              <Button variant="ghost" size="sm">
+                              {/* <Button variant="ghost" size="sm">
                                 Edit
-                              </Button>
-                              <Button variant="ghost" size="sm" className="text-destructive">
+                              </Button> */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive"
+                                onClick={() => handleDelete(policy.name)}
+                              >
                                 Delete
                               </Button>
                             </TableCell>
@@ -411,38 +479,24 @@ export default function TetragonPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="rounded-md border">
-                    <div className="grid grid-cols-[150px_150px_1fr_150px] font-medium bg-muted/50">
-                      <div className="p-3 border-r">Timestamp</div>
-                      <div className="p-3 border-r">Policy</div>
-                      <div className="p-3 border-r">Event</div>
-                      <div className="p-3">Action</div>
-                    </div>
-                    <div className="grid grid-cols-[150px_150px_1fr_150px] border-t">
-                      <div className="p-3 border-r text-muted-foreground">Jun 15, 10:30 AM</div>
-                      <div className="p-3 border-r">Block Shell Execution</div>
-                      <div className="p-3 border-r">Attempted to execute /bin/bash in pod frontend-5d8f9</div>
-                      <div className="p-3 text-red-500">Blocked</div>
-                    </div>
-                    <div className="grid grid-cols-[150px_150px_1fr_150px] border-t">
-                      <div className="p-3 border-r text-muted-foreground">Jun 15, 09:45 AM</div>
-                      <div className="p-3 border-r">Monitor Network</div>
-                      <div className="p-3 border-r">
-                        Connection to external IP 203.0.113.1:443 from pod backend-api-3f7d2
-                      </div>
-                      <div className="p-3 text-blue-500">Audited</div>
-                    </div>
-                    <div className="grid grid-cols-[150px_150px_1fr_150px] border-t">
-                      <div className="p-3 border-r text-muted-foreground">Jun 15, 09:15 AM</div>
-                      <div className="p-3 border-r">Prevent File Deletion</div>
-                      <div className="p-3 border-r">Attempted to delete /etc/passwd in pod database-7c9f3</div>
-                      <div className="p-3 text-red-500">Blocked</div>
-                    </div>
-                    <div className="grid grid-cols-[150px_150px_1fr_150px] border-t">
-                      <div className="p-3 border-r text-muted-foreground">Jun 15, 08:30 AM</div>
-                      <div className="p-3 border-r">Privilege Escalation</div>
-                      <div className="p-3 border-r">Attempted setuid operation in pod analytics-worker-7d8f9</div>
-                      <div className="p-3 text-red-500">Blocked</div>
-                    </div>
+                  {eventsLoading ? (
+  <div className="p-4 text-sm text-muted-foreground">Loading logs...</div>
+) : events.length === 0 ? (
+  <div className="p-4 text-sm text-muted-foreground">No recent events found.</div>
+) : (
+  events.map((event, index) => (
+    <div key={index} className="grid grid-cols-[150px_150px_1fr_150px] border-t">
+      <div className="p-3 border-r text-muted-foreground">
+        {new Date(event.timestamp).toLocaleString()}
+      </div>
+      <div className="p-3 border-r">Policy Event</div>
+      <div className="p-3 border-r">{event.command}</div>
+      <div className="p-3 text-red-500">Detected</div>
+    </div>
+  ))
+)}
+
+                    
                   </div>
                 </CardContent>
                 <CardFooter>
